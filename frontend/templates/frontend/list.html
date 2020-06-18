@@ -55,10 +55,10 @@
             <form action="" id="form">
                 <div class="flex-wrapper">
                     <div style="flex: 6">
-                        <input type="text" class="form-control" id="title" name="title" placeholder="Add Task">
+                        <input type="text" class="form-control rounded-0" id="title" name="title" placeholder="Add Task">
                     </div>
                     <div style="flex: 1">
-                        <input id="submit" type="submit" value="Submit" class="btn btn-success">
+                        <input id="submit" type="submit" value="Submit" class="btn btn-success rounded-0">
                     </div>
                 </div>
             </form>
@@ -75,5 +75,82 @@
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+
+
+<script>
+
+    {#  Global Variables  #}
+    const form = document.getElementById("form-wrapper");
+
+    {# Function Declaration #}
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+
+    const buildList = () => {
+        let wrapper = document.getElementById("list-wrapper");
+        wrapper.innerHTML = "";
+        let url = "http://127.0.0.1:8000/api/task-list/"
+
+        fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+            let list = data;
+            for (let i in list) {
+                let item = `
+                    <div id="data-row-${i}" class="task-wrapper flex-wrapper">
+                        <div style="flex: 7">
+                            <span class="title"> ${list[i].title}</span>
+                        </div>
+                        <div style="flex: 1">
+                            <button class="btn btn-sm btn-outline-info edit">Edit</button>
+                        </div>
+                        <div style="flex: 1">
+                            <button class="btn btn-sm btn-outline-danger delete">-</button>
+                        </div>
+                    </div>
+                `;
+                wrapper.innerHTML += item;
+            }
+        });
+    }
+
+
+     {# Function and Event Calls #}
+     buildList();
+     form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const url = "http://127.0.0.1:8000/api/task-create/";
+        const csrftoken = getCookie('csrftoken');
+        const title = document.getElementById("title").value;
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                'Content-type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({'title': title})
+        }).then(function (response) {
+            buildList();
+            document.getElementById('form').reset();
+        });
+     });
+
+</script>
 </body>
 </html>
