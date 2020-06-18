@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 
     # Local apps
     'api.apps.ApiConfig',
+    'frontend.apps.FrontendConfig',
 
     # 3rd party apps
     'rest_framework',
