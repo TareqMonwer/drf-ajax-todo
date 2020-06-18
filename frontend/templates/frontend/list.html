@@ -79,12 +79,17 @@
 
 <script>
 
-    {#  Global Variables  #}
-    const form = document.getElementById("form-wrapper");
+     {# ------------------------------------------------------------ #}
+     {# ------------------------------------------------------------ #}
+     {#  Global Variables  #}
+     const form = document.getElementById("form-wrapper");
+     var activeItem = null;
 
-    {# Function Declaration #}
 
-    function getCookie(name) {
+     {# ------------------------------------------------------------ #}
+     {# ------------------------------------------------------------ #}
+     {# Function Declaration #}
+     const getCookie = (name) => {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
             const cookies = document.cookie.split(';');
@@ -100,11 +105,13 @@
         return cookieValue;
     }
 
+    const csrftoken = getCookie('csrftoken');
 
-    const buildList = () => {
+
+     const buildList = () => {
         let wrapper = document.getElementById("list-wrapper");
         wrapper.innerHTML = "";
-        let url = "http://127.0.0.1:8000/api/task-list/"
+        let url = "http://127.0.0.1:8000/api/task-list/";
 
         fetch(url)
         .then((response) => response.json())
@@ -126,16 +133,56 @@
                 `;
                 wrapper.innerHTML += item;
             }
+
+            for (let i in list) {
+                const editBtn = document.getElementsByClassName("edit")[i];
+                const deleteBtn = document.getElementsByClassName("delete")[i];
+
+                editBtn.addEventListener("click", (function (item) {
+                    return function () {
+                        editItem(item);
+                    }
+                }(list[i])))
+
+                deleteBtn.addEventListener("click", (function (item) {
+                    return function () {
+                        deleteItem(item);
+                    }
+                }(list[i])))
+            }
         });
     }
 
+     const editItem = (item) => {
+         activeItem = item;
+         document.getElementById("title").value = activeItem.title;
+     }
 
+     const deleteItem = (item) => {
+         fetch(`http://127.0.0.1:8000/api/task-delete/${item.id}/`, {
+             method: "DELETE",
+             headers: {
+                'Content-type': 'application/json',
+                'X-CSRFToken': csrftoken
+             }
+         }).then((response) => {
+             buildList();
+         });
+     }
+
+
+     {# ------------------------------------------------------------ #}
+     {# ------------------------------------------------------------ #}
      {# Function and Event Calls #}
      buildList();
      form.addEventListener('submit', function (e) {
         e.preventDefault();
-        const url = "http://127.0.0.1:8000/api/task-create/";
-        const csrftoken = getCookie('csrftoken');
+        let url = "http://127.0.0.1:8000/api/task-create/";
+        if (activeItem != null) {
+             url = `http://127.0.0.1:8000/api/task-update/${activeItem.id}/`;
+             activeItem = null;
+             console.log("Update uri call");
+         }
         const title = document.getElementById("title").value;
 
         fetch(url, {
@@ -150,6 +197,8 @@
             document.getElementById('form').reset();
         });
      });
+
+
 
 </script>
 </body>
